@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 --[[
-    REJOIN TOOL v2.0.0
+    REJOIN TOOL v2.0.1
     Auto-rejoin Roblox ke Private Server
     For Termux/Android (Cloud Phone)
     
@@ -15,7 +15,7 @@
 -- ============================================
 -- CONFIGURATION
 -- ============================================
-local VERSION = "2.0.0"
+local VERSION = "2.0.1"
 local CONFIG_FILE = "/sdcard/download/rejoin_config.json"
 local COOKIES_FILE = "/sdcard/download/rejoin_cookies.txt"
 local SCRIPTS_DIR = "/sdcard/download/rejoin_scripts/"

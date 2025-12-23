@@ -15,7 +15,7 @@
 -- ============================================
 -- CONFIGURATION
 -- ============================================
-local VERSION = "2.0.1"
+local VERSION = "2.1.0"
 local CONFIG_FILE = "/sdcard/download/rejoin_config.json"
 local COOKIES_FILE = "/sdcard/download/rejoin_cookies.txt"
 local SCRIPTS_DIR = "/sdcard/download/rejoin_scripts/"
@@ -725,23 +725,74 @@ local function run_script()
         )
     end
     
-    -- Monitoring loop
+    -- Monitoring loop with table display
     local cycle = 0
     while true do
         cycle = cycle + 1
         sleep(config.delay_before_rejoin)
         
-        local time_str = os.date("%H:%M:%S")
-        print_colored(CYAN, "[" .. time_str .. "] Check cycle #" .. cycle)
+        -- Clear and redraw table
+        clear_screen()
         
+        -- ASCII Art Banner
+        print(CYAN .. [[
+ ____  ___    _  ___  _  _  
+|  _ \| __|  | |/ _ \| || | 
+| |_) | _| __|| | |_| | || |_ 
+|____/|___\__|_|\___/|_|____|
+]] .. RESET)
+        print(WHITE .. "        v" .. VERSION .. RESET)
+        print()
+        
+        -- Table header
+        print(CYAN .. "┌────────────────────────────────┬─────────────────────┐" .. RESET)
+        print(CYAN .. "│ " .. WHITE .. "PACKAGE" .. string.rep(" ", 24) .. CYAN .. "│ " .. WHITE .. "STATUS" .. string.rep(" ", 14) .. CYAN .. "│" .. RESET)
+        print(CYAN .. "├────────────────────────────────┼─────────────────────┤" .. RESET)
+        
+        -- System info row
+        local mem_cmd = "free -m 2>/dev/null | awk '/Mem:/ {printf \"%.0f\", $7}'"
+        local mem_free = execute_command(mem_cmd):match("(%d+)") or "N/A"
+        local mem_total_cmd = "free -m 2>/dev/null | awk '/Mem:/ {printf \"%.0f\", $2}'"
+        local mem_total = execute_command(mem_total_cmd):match("(%d+)") or "N/A"
+        local mem_percent = ""
+        if tonumber(mem_free) and tonumber(mem_total) and tonumber(mem_total) > 0 then
+            mem_percent = string.format(" (%.0f%%)", (tonumber(mem_free) / tonumber(mem_total)) * 100)
+        end
+        
+        local sys_name = "System"
+        local sys_status = YELLOW .. "Cycle #" .. cycle .. RESET
+        print(CYAN .. "│ " .. WHITE .. sys_name .. string.rep(" ", 30 - #sys_name) .. CYAN .. "│ " .. sys_status .. string.rep(" ", 20 - #tostring(cycle) - 8) .. CYAN .. "│" .. RESET)
+        
+        local mem_name = "Memory"
+        local mem_status = YELLOW .. "Free: " .. mem_free .. "MB" .. mem_percent .. RESET
+        local mem_display = "Free: " .. mem_free .. "MB" .. mem_percent
+        print(CYAN .. "│ " .. WHITE .. mem_name .. string.rep(" ", 30 - #mem_name) .. CYAN .. "│ " .. mem_status .. string.rep(" ", 19 - #mem_display) .. CYAN .. "│" .. RESET)
+        
+        print(CYAN .. "├────────────────────────────────┼─────────────────────┤" .. RESET)
+        
+        -- Package rows
+        local any_crashed = false
         for _, pkg in ipairs(config.packages) do
             local display_name = pkg
             if config.mask_username then
                 display_name = pkg:gsub("client", "cli***")
             end
             
-            if not is_app_running(pkg) then
-                print_colored(RED, "    [!] " .. display_name .. " - NOT RUNNING! Rejoining...")
+            -- Truncate long names
+            if #display_name > 28 then
+                display_name = display_name:sub(1, 25) .. "..."
+            end
+            
+            local is_running = is_app_running(pkg)
+            local status_text, status_color
+            
+            if is_running then
+                status_text = "Running"
+                status_color = YELLOW
+            else
+                status_text = "Rejoining..."
+                status_color = RED
+                any_crashed = true
                 
                 -- Send webhook alert
                 if config.discord_webhook and config.discord_webhook ~= "" then
@@ -749,15 +800,25 @@ local function run_script()
                         config.discord_webhook,
                         "⚠️ App Crashed",
                         display_name .. " stopped running. Rejoining...",
-                        16711680  -- Red
+                        16711680
                     )
                 end
                 
                 launch_app(pkg, place_id, link_code)
-                sleep(2)
-            else
-                print_colored(YELLOW, "    [✓] " .. display_name .. " - Running")
             end
+            
+            local name_padding = 30 - #display_name
+            local status_padding = 19 - #status_text
+            
+            print(CYAN .. "│ " .. WHITE .. display_name .. string.rep(" ", name_padding) .. CYAN .. "│ " .. status_color .. status_text .. RESET .. string.rep(" ", status_padding) .. CYAN .. "│" .. RESET)
+        end
+        
+        print(CYAN .. "└────────────────────────────────┴─────────────────────┘" .. RESET)
+        print()
+        print(WHITE .. "Press Ctrl+C to stop or run: pkill -f rejoin" .. RESET)
+        
+        if any_crashed then
+            sleep(2)
         end
     end
 end

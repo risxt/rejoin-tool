@@ -497,19 +497,17 @@ end
 -- ============================================
 local function launch_app(package_name, place_id, link_code)
     local deep_link = string.format(
-        "roblox://placeId=%s&linkCode=%s",
+        "roblox://placeId=%s\\&linkCode=%s",
         place_id or "",
         link_code or ""
     )
     
-    -- Use package name for activity class (works for cloned apps like clientv, clientw, etc)
-    local activity_class = package_name .. ".ActivitySplash"
-    
+    -- Use VIEW intent to let Android find the correct activity automatically
+    -- This works better for cloned apps where activity names vary
     local cmd = string.format(
-        'su -c "am start -n %s/%s --windowingMode 5 -d \\"%s\\""',
-        package_name,
-        activity_class,
-        deep_link
+        'su -c "am start -a android.intent.action.VIEW -d \\"%s\\" -p %s --windowingMode 5"',
+        deep_link,
+        package_name
     )
     
     print_colored(YELLOW, "[>] Launching: " .. package_name)

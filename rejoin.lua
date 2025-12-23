@@ -134,7 +134,7 @@ local function json_decode(str)
         discord_webhook = "",
         mask_username = false,
         inject_scripts = false,
-        delay_between_launch = 3,
+        delay_between_launch = 8,
         delay_before_rejoin = 60
     }
     
@@ -163,7 +163,7 @@ local function json_decode(str)
     result.inject_scripts = str:match('"inject_scripts"%s*:%s*true') ~= nil
     
     -- Parse numbers
-    result.delay_between_launch = tonumber(str:match('"delay_between_launch"%s*:%s*(%d+)')) or 3
+    result.delay_between_launch = tonumber(str:match('"delay_between_launch"%s*:%s*(%d+)')) or 8
     result.delay_before_rejoin = tonumber(str:match('"delay_before_rejoin"%s*:%s*(%d+)')) or 60
     
     return result
@@ -565,7 +565,7 @@ local function setup_configuration()
         discord_webhook = "",
         mask_username = false,
         inject_scripts = false,
-        delay_between_launch = 3,
+        delay_between_launch = 8,
         delay_before_rejoin = 60
     }
     
@@ -734,26 +734,16 @@ local function run_script()
         -- Clear and redraw
         clear_screen()
         
-        -- Simple Banner
-        print(CYAN .. "REJOIN TOOL" .. RESET)
-        print(WHITE .. "v" .. VERSION .. RESET)
+        -- Banner
+        print(CYAN .. "REJOIN TOOL v" .. VERSION .. RESET)
+        print(CYAN .. "========================" .. RESET)
+        print()
+        print(WHITE .. "Cycle: " .. YELLOW .. "#" .. cycle .. RESET)
         print()
         
-        -- Header
-        print(CYAN .. string.format("%-32s  %-20s", "PACKAGE", "STATUS") .. RESET)
-        print(CYAN .. string.rep("-", 54) .. RESET)
-        
-        -- System info
-        local mem_cmd = "free -m 2>/dev/null | awk '/Mem:/ {print $7}'"
-        local mem_free = execute_command(mem_cmd):match("(%d+)") or "?"
-        print(WHITE .. string.format("%-32s", "System") .. "  " .. YELLOW .. "Cycle #" .. cycle .. RESET)
-        print(WHITE .. string.format("%-32s", "Memory") .. "  " .. YELLOW .. "Free: " .. mem_free .. "MB" .. RESET)
-        
-        print(CYAN .. string.rep("-", 54) .. RESET)
-        
-        -- Package rows
+        -- Package status
         local any_crashed = false
-        for _, pkg in ipairs(config.packages) do
+        for i, pkg in ipairs(config.packages) do
             local display_name = pkg
             if config.mask_username then
                 display_name = pkg:gsub("client", "cli***")
@@ -782,7 +772,8 @@ local function run_script()
                 launch_app(pkg, place_id, link_code)
             end
             
-            print(WHITE .. string.format("%-32s", display_name) .. "  " .. status_color .. status_text .. RESET)
+            print(WHITE .. i .. ") " .. display_name)
+            print("   " .. status_color .. status_text .. RESET)
         end
         
         print()

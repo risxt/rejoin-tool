@@ -135,7 +135,7 @@ local function json_decode(str)
         mask_username = false,
         inject_scripts = false,
         delay_between_launch = 3,
-        delay_before_rejoin = 5
+        delay_before_rejoin = 60
     }
     
     -- Parse packages array
@@ -164,7 +164,7 @@ local function json_decode(str)
     
     -- Parse numbers
     result.delay_between_launch = tonumber(str:match('"delay_between_launch"%s*:%s*(%d+)')) or 3
-    result.delay_before_rejoin = tonumber(str:match('"delay_before_rejoin"%s*:%s*(%d+)')) or 5
+    result.delay_before_rejoin = tonumber(str:match('"delay_before_rejoin"%s*:%s*(%d+)')) or 60
     
     return result
 end
@@ -566,7 +566,7 @@ local function setup_configuration()
         mask_username = false,
         inject_scripts = false,
         delay_between_launch = 3,
-        delay_before_rejoin = 5
+        delay_before_rejoin = 60
     }
     
     -- Step 1: Package Selection

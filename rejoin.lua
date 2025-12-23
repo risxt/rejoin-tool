@@ -502,9 +502,13 @@ local function launch_app(package_name, place_id, link_code)
         link_code or ""
     )
     
+    -- Use package name for activity class (works for cloned apps like clientv, clientw, etc)
+    local activity_class = package_name .. ".ActivitySplash"
+    
     local cmd = string.format(
-        'su -c "am start -n %s/com.roblox.client.ActivitySplash --windowingMode 5 -d \\"%s\\""',
+        'su -c "am start -n %s/%s --windowingMode 5 -d \\"%s\\""',
         package_name,
+        activity_class,
         deep_link
     )
     
